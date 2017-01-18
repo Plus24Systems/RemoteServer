@@ -274,11 +274,11 @@ int main (void)
 		    /////////////////////////////////////////////////////////
             // Get Sensor Temp - zynq_info.sh
             if (rx_buffer [0] == GET_AXIOM_TEMP_REQUEST) {  
-			    fp = popen ("/root/zynq_info.sh -s", "r");  // NOTE:  This needs to be the modified version, see Dev Notes.
+			    fp = popen ("/root/get_temp.sh -s", "r");  
 			    
 			    if (fp == NULL) {
                     #if DEBUG
-			        printf ("Failed to run zynq_info.sh command\n" );
+			        printf ("Failed to run get_temp.sh command\n" );
                     #endif
                     
                     uart_tx (GET_AXIOM_STATUS_RESPONSE, "ERROR"); // We send back an AXIOM Status Error                    
