@@ -4,7 +4,7 @@
 //  Author:   Phil Kerr                                                       //
 //  Company:  Plus24 Systems Ltd.                                             //
 //  GitHub:   https://github.com/Plus24Systems/RemoteServer                   //
-//  Copyright (C) 2016 Phil Kerr - Plus24 Systems Ltd.                        //
+//  Copyright (C) 2016 - 2017 Phil Kerr - Plus24 Systems Ltd.                 //
 //                                                                            //
 //   This program is free software: you can redistribute it and/or modify     //
 //   it under the terms of the GNU General Public License as published by     //
@@ -45,7 +45,7 @@
 // Values from 0x01 to 0x7f are for _REQUEST messages, values 
 // from 0x80 to 0xff are for _RESPONSE messages.
 
-// This section MUST be replicated exacly in RemotePlusDefines.h
+// This section MUST be replicated exactly in RemotePlusDefines.h
 
 #define GET_AXIOM_TEMP_REQUEST 0x01
 #define GET_AXIOM_TEMP_RESPONSE 0x80
@@ -131,6 +131,7 @@ void uart_tx (int msgType, unsigned char* data)
     #if DEBUG
     if (message [0] == GET_AXIOM_TEMP_RESPONSE) printf ("Temp Msg response\n");
     if (message [0] == GET_AXIOM_STATUS_RESPONSE) printf ("AxiomSys Msg response\n");
+    if (message [0] == GET_GAIN_RESPONSE) printf ("Get Gain Msg response\n");    
     #endif
     
     for (loop = 1 ; loop <= datalen + 1 ; loop++) 
@@ -162,8 +163,11 @@ int main (void)
  
     // UART init
     uart_init ();
+    
+    #if DEBUG      
     printf ("UART INIT Done\n");
-        
+    #endif        
+
     unsigned char rx_buffer [4096];
 
     // Create UART transmit thread and check status
@@ -234,10 +238,10 @@ int main (void)
                         // If you have an AXIOM Beta where you have to manually start the firmware
                         // uncomment the following line out.
                          
-                        //status = execv ("/root/kick_manual.sh", NULL);
+                        status = execv ("/root/kick_manual.sh", NULL);
                         
                         // And comment out the following line if the above is uncommented.
-                        status = 0;
+                        //status = 0;
 
                         sleep (4);
                         _exit (EXIT_FAILURE);
@@ -400,19 +404,19 @@ int main (void)
                         char* argv;                 
                    
                         if (rx_buffer [1] == 0)
-                            argv = "5ms";
+                            argv = "5";
 
                         if (rx_buffer [1] == 1)
-                            argv = "10ms";
+                            argv = "10";
 
                         if (rx_buffer [1] == 2)
-                            argv = "15ms";
+                            argv = "15";
 
                         if (rx_buffer [1] == 3)
-                            argv = "20ms";
+                            argv = "20";
 
                         if (rx_buffer [1] == 4)
-                            argv = "25ms";
+                            argv = "25";
                             
                         status = execv ("/root/set_exposure.sh", argv);
                         exit (EXIT_FAILURE);                        
