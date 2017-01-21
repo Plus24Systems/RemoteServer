@@ -40,13 +40,13 @@ case $1 in
     ;;
 
     (*)
-        echo "Usage: $0 <gain>"
-        echo "Available exposure: 1 2 3 4 3/3"
+        echo "Usage: $0 <exposure>"
+        echo "Available exposures: 5 10 15 20 25"
         exit
     ;;
 esac
 
-echo "Setting gain x$1 ($GAIN,$ADC_RANGE)..."
+echo "Setting Exposure $EXPOSUREms..."
 . /root/cmv.func
 /root/cmv_snap3 -z -e $EXPOSURE
 
