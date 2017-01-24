@@ -34,7 +34,7 @@
 #include <sys/stat.h>
 #include <termios.h>
 #include <pthread.h>
-
+#include <errno.h>
 //----------------------------------------------------------------------------//
 // Defines which end with a _REQUEST are Signal Messages 
 // received from the RemotePlus.
@@ -216,7 +216,6 @@ int main (void)
                 #endif
                 
                 if (cameraRunning == 0) {
-                    pid_t parent = getpid ();
                     pid_t pid = fork ();
 
                     if (pid == -1) {
@@ -306,30 +305,34 @@ int main (void)
                 printf ("Get Gain\n");
                 #endif
                 
-			    fp = popen ("/root/get_gain.sh", "r");
-			    
-			    if (fp == NULL) {
-                    #if DEBUG
-			        printf ("Failed to run get_gain.sh command\n" );
-			        #endif
-			        
-			        uart_tx (GET_AXIOM_STATUS_RESPONSE, "ERROR"); // We send back an AXIOM Status Error
-			    } else {
-    		        while (fgets (shellOutput, sizeof (shellOutput) -1, fp) != NULL) {
+			    if (cameraRunning == 1) {
+    			    fp = popen ("/root/get_gain.sh", "r");
+
+    			    if (fp == NULL) {
                         #if DEBUG
-                        printf ("Get Gain: %s\n", shellOutput);
-                        #endif
+    			        printf ("Failed to run get_gain.sh command\n" );
+    			        #endif
+			        
+    			        uart_tx (GET_AXIOM_STATUS_RESPONSE, "ERROR"); // We send back an AXIOM Status Error
+    			    } else {
+        		        while (fgets (shellOutput, sizeof (shellOutput) -1, fp) != NULL) {
+                            #if DEBUG
+                            printf ("Get Gain: %s\n", shellOutput);
+                            #endif
                         
-			            uart_tx (GET_GAIN_RESPONSE, shellOutput); // We send back the gain setting
-			        }
-		        }	
-		        pclose (fp);	
+    			            uart_tx (GET_GAIN_RESPONSE, shellOutput); // We send back the gain setting
+    			        }
+    		        }	
+    		        pclose (fp);
+                } else 
+                    printf ("AXIOM not running - get_gain command not executed\n");
+	
 		    } ///////////////////////////////////////////////////////	
 
 
 		    /////////////////////////////////////////////////////////
             // Get FPS - not currently implemented
-            if (rx_buffer [0] == 0x73) { // s
+            if (rx_buffer [0] == 0x73) { 
 
 	            if (cameraRunning == 1) {
         	        //getFPS ();
@@ -367,7 +370,7 @@ int main (void)
 		                fp = popen ("/root/set_gain.sh 4", "w"); 	                            
                 } else {
                     #if DEBUG
-                    printf ("AXIOM not running\n");
+                    printf ("AXIOM not running - set_gain command not executed\n");
                     #endif                
 			    }
 			    
@@ -389,8 +392,8 @@ int main (void)
                 #if DEBUG
                 printf ("Set Exposure %d\n", rx_buffer [1]);
                 #endif
-                
-                pid_t parent = getpid();
+
+                int set_exposure_status;                
                 
 			    if (cameraRunning == 1) {                
                     pid_t pid = fork ();
@@ -398,32 +401,46 @@ int main (void)
                     if (pid == -1) {
                         // error, failed to fork()
                    } else if (pid > 0) {
-                       int status;
                         waitpid (pid, &status, 0);
                     } else {
-                        char* argv;                 
+                        char* set_exposure_arg [2];                 
+                   
+                        // Build up the args for the command
+                        set_exposure_arg [0] = "/root/set_exposure.sh";
                    
                         if (rx_buffer [1] == 0)
-                            argv = "5";
+                            set_exposure_arg [1] = "0";
 
                         if (rx_buffer [1] == 1)
-                            argv = "10";
+                            set_exposure_arg [1] = "1";
 
                         if (rx_buffer [1] == 2)
-                            argv = "15";
+                            set_exposure_arg [1] = "2";
 
                         if (rx_buffer [1] == 3)
-                            argv = "20";
+                            set_exposure_arg [1] = "3";
 
                         if (rx_buffer [1] == 4)
-                            argv = "25";
-                            
-                        status = execv ("/root/set_exposure.sh", argv);
+                            set_exposure_arg [1] = "4";
+
+                        if (rx_buffer [1] == 5)
+                            set_exposure_arg [1] = "5";
+
+                        if (rx_buffer [1] == 6)
+                            set_exposure_arg [1] = "6";
+
+                        if (rx_buffer [1] == 7)
+                            set_exposure_arg [1] = "7";
+
+                        set_exposure_arg [2] = NULL;
+
+                        // Execute the command
+                        set_exposure_status = execv (set_exposure_arg [0], (char * const*) set_exposure_arg);
                         exit (EXIT_FAILURE);                        
                     }
                 }
 
-			    if (status == -1) {
+			    if (set_exposure_status == -1) {
                     #if DEBUG			    
 			        printf ("Failed to run set_exposure.sh command\n" );
 			        #endif
@@ -448,8 +465,8 @@ int main (void)
                 #if DEBUG            
                 printf ("Set HDMI Live Stream %d\n", rx_buffer [1]);
                 #endif    
-                            
-                pid_t parent = getpid ();
+                
+                int set_hdmi_status;                  
                 
 			    if (cameraRunning == 1) {                
                     pid_t pid = fork ();
@@ -457,23 +474,28 @@ int main (void)
                     if (pid == -1) {
                         // error, failed to fork ()
                    } else if (pid > 0) {
-                       int status;
                         waitpid (pid, &status, 0);
                     } else {
-                        char* argv;
+                        char* set_hdmi_arg [2];                 
+                   
+                        // Build up the args for the command
+                        set_hdmi_arg [0] = "/root/set_hdmi_live_stream.sh";
 
                         if (rx_buffer [1] == 0)
-                            argv = "ON";
+                            set_hdmi_arg [1] = "ON";
 
                         if (rx_buffer [1] == 1)
-                            argv = "OFF";
+                            set_hdmi_arg [1] = "OFF";
 
-                        status = execv ("/root/set_hdmi_live_stream.sh", argv);
+                        set_hdmi_arg [2] = NULL;
+
+                        // Execute the command
+                        set_hdmi_status = execv (set_hdmi_arg [0], (char * const*) set_hdmi_status);
                         exit (EXIT_FAILURE);                        
                     }
                 }
 
-			    if (status == -1) {
+			    if (set_hdmi_status == -1) {
                     #if DEBUG   			    
 			        printf ("Failed to run set_hdmi_live_stream.sh command\n" );
                     #endif
@@ -504,7 +526,7 @@ int main (void)
                 printf ("Set Overlays %d\n", rx_buffer [1]);
                 #endif
 
-                pid_t parent = getpid ();
+                int set_overlays_status;
                 
 			    if (cameraRunning == 1) {                
                     pid_t pid = fork ();
@@ -512,26 +534,32 @@ int main (void)
                     if (pid == -1) {
                         // error, failed to fork ()
                    } else if (pid > 0) {
-                       int status;
                        waitpid (pid, &status, 0);
                     } else {
-                        char* argv;
 
+                        char* set_overlays_arg [2];   
+                        
+                        // Build up the args for the command                        
+                        set_overlays_arg [0] = "/root/set_overlays.sh";
+                        
                         if (rx_buffer [1] == 1)
-                            argv = "ON";
+                            set_overlays_arg [1] = "ON";
 
                         if (rx_buffer [1] == 0)
-                            argv = "OFF";
+                            set_overlays_arg [1] = "OFF";
 
                         if (rx_buffer [1] == 2)
-                            argv = "CL";
-                            
-                        status = execv ("/root/set_overlays.sh", argv);
+                            set_overlays_arg [1] = "CL";
+
+                        set_overlays_arg [2] = NULL;                            
+
+                        // Execute the command
+                        set_overlays_status = execv (set_overlays_arg [0], (char * const*) set_overlays_arg);
                         exit (EXIT_FAILURE);                        
                     }
                 }
 
-			    if (status == -1) {
+			    if (set_overlays_status == -1) {
                     #if DEBUG			    
 			        printf ("Failed to run set_overlays.sh command\n" );
                     #endif

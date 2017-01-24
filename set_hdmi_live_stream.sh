@@ -1,10 +1,12 @@
+#!/bin/sh
+
 ##----------------------------------------------------------------------------##
 ##  Application: set_hdmi_live_stream.sh for AXIOM Cameras                    ##
 ##                                                                            ##
 ##  Author:   Phil Kerr                                                       ##
 ##  Company:  Plus24 Systems Ltd.                                             ##
 ##  GitHub:   https://github.com/Plus24Systems/RemoteServer                   ##
-##  Copyright (C) 2016 Phil Kerr - Plus24 Systems Ltd.                        ##
+##  Copyright (C) 2016 - 2017 Phil Kerr - Plus24 Systems Ltd.                 ##
 ##                                                                            ##
 ##   This program is free software: you can redistribute it and/or modify     ##
 ##   it under the terms of the GNU General Public License as published by     ##
@@ -23,22 +25,21 @@
 ##----------------------------------------------------------------------------##
 
 case $1 in 
-   ("ON")
-        REG15=0x01000100
+    ("ON")
+        LIVESTREAMCMD='fil_reg 15 0x01000100'
     ;;
-   ("OFF")
-        REG15=0
+    ("OFF")
+        LIVESTREAMCMD='fil_reg 15 0'
     ;;
 
     (*)
-        echo "Usage: $0 <gain>"
+        echo "Usage: $0 <Live Stream Mode>"
         echo "Available values: ON or OFF"
         exit
     ;;
 esac
 
 
-echo "Setting gain $1"
-
+echo "Setting HDMI Live Stream Mode $1"
 . /root/cmv.func
-/root/cmv_snap3 -z -e $EXPOSURE
+$LIVESTREAMCMD

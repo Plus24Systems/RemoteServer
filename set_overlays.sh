@@ -1,10 +1,12 @@
+#!/bin/sh
+
 ##----------------------------------------------------------------------------##
 ##  Application: set_overlays.sh for AXIOM Cameras                            ##
 ##                                                                            ##
 ##  Author:   Phil Kerr                                                       ##
 ##  Company:  Plus24 Systems Ltd.                                             ##
 ##  GitHub:   https://github.com/Plus24Systems/RemoteServer                   ##
-##  Copyright (C) 2016 Phil Kerr - Plus24 Systems Ltd.                        ##
+##  Copyright (C) 2016 - 2017 Phil Kerr - Plus24 Systems Ltd.                 ##
 ##                                                                            ##
 ##   This program is free software: you can redistribute it and/or modify     ##
 ##   it under the terms of the GNU General Public License as published by     ##
@@ -23,14 +25,14 @@
 ##----------------------------------------------------------------------------##
 
 case $1 in 
-   ("OF")
+    ("OFF")
         OVERLAYCMD='gen_reg 11 0x0004F000'
     ;;
-   ("ON")
+    ("ON")
         OVERLAYCMD='gen_reg 11 0x0104F000'
     ;;
-   ("CL")
-        OVERLAYCMD='./mimg -a -o -P 0'
+    ("CL")
+        OVERLAYCMD='/root/mimg -a -o -P 0'
     ;;
 
     (*)
@@ -42,5 +44,5 @@ esac
 
 echo "Setting overlay $1"
 . /root/cmv.func
-/root/cmv_snap3 -z -e $EXPOSURE
+$OVERLAYCMD
 
